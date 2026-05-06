@@ -8,5 +8,5 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('', lambda request: redirect('catalogo'), name='home'),
     path('accounts/', include('accounts.urls')),
-    path('catalogo/', include('store.urls')),
+    path('', include('store.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
