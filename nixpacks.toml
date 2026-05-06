@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["python312", "libjpeg", "zlib", "libtiff", "freetype", "lcms2", "libwebp", "tcl"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
