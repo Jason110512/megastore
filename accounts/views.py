@@ -13,20 +13,21 @@ def login_view(request):
             return redirect('admin_dashboard')
         return redirect('catalogo')
 
+    error = None
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        from django.contrib.auth import authenticate, login
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
             login(request, user)
-            messages.success(request, f'¡Bienvenido, {user.username}!')
             if user.is_admin_store():
                 return redirect('admin_dashboard')
             return redirect('catalogo')
         else:
-            messages.error(request, 'Usuario o contraseña incorrectos.')
-    else:
-        form = LoginForm()
-    return render(request, 'accounts/login.html', {'form': form})
+            error = 'Usuario o contraseña incorrectos.'
+
+    return render(request, 'accounts/login.html', {'error': error})
 
 
 def registro_view(request):
