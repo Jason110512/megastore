@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mega Store – Registro</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; min-height: 100vh; background: linear-gradient(135deg, #f9c6e0 0%, #f06fa1 40%, #e03e7c 100%); display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .register-card { background: white; border-radius: 24px; padding: 40px 48px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(192,36,106,0.25); }
+  .brand { text-align: center; margin-bottom: 6px; }
+  .brand-icons { font-size: 2.8rem; margin-bottom: 8px; }
+  .brand-name { font-family: 'Playfair Display', serif; font-size: 1.8rem; background: linear-gradient(135deg, #f06fa1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+  .page-title { text-align: center; font-size: 1.3rem; font-weight: 700; color: #2d1a2e; margin-bottom: 4px; letter-spacing: 2px; text-transform: uppercase; }
+  .page-sub { text-align: center; font-size: 0.82rem; color: #999; margin-bottom: 24px; }
+  .input-group-ms { position: relative; margin-bottom: 14px; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #ccc; font-size: 0.95rem; }
+  .input-group-ms input {
+    width: 100%; padding: 11px 14px 11px 42px; border: 2px solid #f0ddf5;
+    border-radius: 10px; font-size: 0.9rem; font-family: 'Poppins', sans-serif;
+    background: #fdf5fb; outline: none; transition: border-color 0.2s;
+  }
+  .input-group-ms input:focus { border-color: #e03e7c; background: white; }
+  .btn-register {
+    width: 100%; padding: 13px; background: linear-gradient(135deg, #f06fa1, #e03e7c);
+    color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; font-family: 'Poppins', sans-serif; margin-top: 6px; transition: opacity 0.2s;
+  }
+  .btn-register:hover { opacity: 0.9; }
+  .login-link { text-align: center; font-size: 0.84rem; color: #999; margin-top: 14px; }
+  .login-link a { color: #8b5cf6; font-weight: 600; text-decoration: none; }
+  .field-error { font-size: 0.75rem; color: #dc2626; margin-top: 2px; padding-left: 4px; }
+  .error-msg { background: #fee2e2; color: #991b1b; border-radius: 8px; padding: 10px 14px; font-size: 0.83rem; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="register-card">
+  <div class="brand">
+    <div class="brand-icons">🛍️🛒</div>
+    <div class="brand-name">MEGA STORE</div>
+  </div>
+  <div class="page-title">Registro</div>
+  <div class="page-sub">Llena los campos para crear una cuenta</div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="error-msg">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="input-group-ms">
+      <i class="fas fa-user input-icon"></i>
+      <input type="text" name="nombre_completo" placeholder="Nombre Completo" value="{{ form.nombre_completo.value|default:'' }}" required>
+      {% if form.nombre_completo.errors %}<div class="field-error">{{ form.nombre_completo.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="input-group-ms">
+      <i class="fas fa-at input-icon"></i>
+      <input type="text" name="username" placeholder="Usuario" value="{{ form.username.value|default:'' }}" required>
+      {% if form.username.errors %}<div class="field-error">{{ form.username.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="input-group-ms">
+      <i class="fas fa-lock input-icon"></i>
+      <input type="password" name="password1" placeholder="Contraseña" required>
+      {% if form.password1.errors %}<div class="field-error">{{ form.password1.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="input-group-ms">
+      <i class="fas fa-lock input-icon"></i>
+      <input type="password" name="password2" placeholder="Confirmar Contraseña" required>
+      {% if form.password2.errors %}<div class="field-error">{{ form.password2.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="input-group-ms">
+      <i class="fas fa-envelope input-icon"></i>
+      <input type="email" name="correo" placeholder="Correo Electrónico" value="{{ form.correo.value|default:'' }}" required>
+      {% if form.correo.errors %}<div class="field-error">{{ form.correo.errors.0 }}</div>{% endif %}
+    </div>
+    <button type="submit" class="btn-register">Registrar</button>
+  </form>
+
+  <div class="login-link">¿Ya tienes cuenta? <a href="{% url 'login' %}">Ingresa aquí.</a></div>
+</div>
+</body>
+</html>

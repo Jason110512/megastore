@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% block title %}Información de Envío – Mega Store{% endblock %}
+{% block topbar_title %}Información del Envío{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'catalogo' %}"><i class="fas fa-home"></i> Home</a>
+<a href="{% url 'catalogo' %}"><i class="fas fa-box"></i> Catálogo</a>
+<a href="{% url 'mis_ordenes' %}"><i class="fas fa-clipboard-list"></i> Ordenes</a>
+<a href="{% url 'mis_facturas' %}" class="active"><i class="fas fa-file-invoice"></i> Facturas</a>
+<a href="{% url 'ubicaciones' %}"><i class="fas fa-map-marker-alt"></i> Ubicaciones</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pago-panel {
+    display: none; background: #fdf5fb; border-radius: 12px;
+    padding: 20px; margin-top: 14px; border: 2px solid #f0ddf5;
+    animation: fadeInPanel 0.3s ease;
+  }
+  .pago-panel.activo { display: block; }
+  @keyframes fadeInPanel { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+  .card-preview {
+    background: linear-gradient(135deg, #8b5cf6 0%, #e03e7c 100%);
+    border-radius: 16px; padding: 22px 24px; color: white;
+    margin-bottom: 20px; position: relative; overflow: hidden;
+    box-shadow: 0 8px 28px rgba(139,92,246,0.35);
+  }
+  .card-preview::before { content:''; position:absolute; top:-40px; right:-40px; width:140px; height:140px; background:rgba(255,255,255,0.1); border-radius:50%; }
+  .card-preview::after  { content:''; position:absolute; bottom:-30px; left:40px; width:100px; height:100px; background:rgba(255,255,255,0.07); border-radius:50%; }
+  .card-chip { width:36px; height:26px; background:linear-gradient(135deg,#ffd700,#ffa500); border-radius:5px; margin-bottom:18px; }
+  .card-number { font-size:1.1rem; letter-spacing:3px; font-weight:600; margin-bottom:16px; font-family:monospace; }
+  .card-bottom { display:flex; justify-content:space-between; align-items:flex-end; }
+  .card-label { font-size:0.62rem; opacity:0.7; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
+  .card-val { font-size:0.88rem; font-weight:600; }
+
+  .transfer-box { background:white; border-radius:10px; padding:14px 16px; border:2px solid #e8e0f5; margin-bottom:12px; }
+  .transfer-box .t-label { font-size:0.7rem; color:#8b5cf6; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
+  .transfer-box .t-val { font-size:0.95rem; font-weight:700; color:#2d1a2e; }
+
+  .ms-input {
+    width:100%; padding:11px 14px; border:2px solid #f0ddf5; border-radius:10px;
+    font-size:0.9rem; font-family:'Poppins',sans-serif; background:#fdf5fb;
+    outline:none; transition:border-color 0.2s;
+  }
+  .ms-input:focus { border-color:#e03e7c; background:white; }
+  .ms-label { font-size:0.82rem; font-weight:600; color:#5a4060; margin-bottom:5px; display:block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- ── FORMULARIO ─────────────────────────────── -->
+  <div class="col-lg-7">
+    <div class="page-header">
+      <h4><i class="fas fa-truck me-2" style="color:#e03e7c;"></i>Información de Envío</h4>
+      <p>Completa el formulario para confirmar tu envío</p>
+    </div>
+
+    <div style="background:white;border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(224,62,124,0.1);">
+      <form method="POST" id="checkoutForm">
+        {% csrf_token %}
+
+        <!-- Datos de envío -->
+        <div class="mb-3">
+          <label class="ms-label"><i class="fas fa-user me-1" style="color:#e03e7c;"></i>Nombre Completo</label>
+          <input type="text" name="nombre_envio" class="ms-input" placeholder="Nombre Completo"
+            value="{{ form.nombre_envio.value|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="ms-label"><i class="fas fa-map-marker-alt me-1" style="color:#8b5cf6;"></i>Dirección</label>
+          <input type="text" name="direccion" class="ms-input" placeholder="Dirección"
+            value="{{ form.direccion.value|default:'' }}" required>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="ms-label">Ciudad</label>
+            <input type="text" name="ciudad" class="ms-input" placeholder="Ciudad"
+              value="{{ form.ciudad.value|default:'' }}" required>
+          </div>
+          <div class="col-6">
+            <label class="ms-label">Estado</label>
+            <input type="text" name="estado_envio" class="ms-input" placeholder="Estado"
+              value="{{ form.estado_envio.value|default:'' }}" required>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="ms-label">Código Postal</label>
+          <input type="text" name="codigo_postal" class="ms-input" placeholder="Código Postal"
+            value="{{ form.codigo_postal.value|default:'' }}" required>
+        </div>
+
+        <hr style="border-color:#f0ddf5;margin-bottom:20px;">
+
+        <!-- Método de pago -->
+        <div class="mb-2">
+          <label class="ms-label"><i class="fas fa-credit-card me-1" style="color:#e03e7c;"></i>Método de Pago</label>
+          <select name="metodo_pago" class="ms-input form-select" id="metodoPago" onchange="togglePago(this.value)">
+            <option value="Tarjeta de Crédito">💳 Tarjeta de Crédito</option>
+            <option value="Transferencia">🏦 Transferencia Bancaria</option>
+            <option value="Efectivo">💵 Efectivo contra entrega</option>
+          </select>
+        </div>
+
+        <!-- ── TARJETA ── -->
+        <div class="pago-panel activo" id="panel_tarjeta">
+          <div class="card-preview">
+            <div class="card-chip"></div>
+            <div class="card-number" id="prev_num">•••• •••• •••• ••••</div>
+            <div class="card-bottom">
+              <div>
+                <div class="card-label">Titular</div>
+                <div class="card-val" id="prev_nombre">NOMBRE APELLIDO</div>
+              </div>
+              <div>
+                <div class="card-label">Vence</div>
+                <div class="card-val" id="prev_exp">MM/AA</div>
+              </div>
+              <div style="font-size:1.8rem;opacity:0.85;z-index:1;position:relative;">💳</div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="ms-label">Número de Tarjeta</label>
+            <input type="text" name="numero_tarjeta" id="inp_num" class="ms-input"
+              placeholder="1234 5678 9012 3456" maxlength="19"
+              oninput="fmtCard(this)" style="font-family:monospace;font-size:1rem;letter-spacing:2px;">
+          </div>
+          <div class="mb-3">
+            <label class="ms-label">Nombre en la Tarjeta</label>
+            <input type="text" name="nombre_tarjeta" id="inp_nombre" class="ms-input"
+              placeholder="Como aparece en tu tarjeta"
+              oninput="document.getElementById('prev_nombre').textContent=this.value.toUpperCase()||'NOMBRE APELLIDO'">
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="ms-label">Expiración</label>
+              <input type="text" name="expiracion" id="inp_exp" class="ms-input"
+                placeholder="MM/AA" maxlength="5" oninput="fmtExp(this)">
+            </div>
+            <div class="col-6">
+              <label class="ms-label">CVV</label>
+              <input type="password" name="cvv" class="ms-input" placeholder="•••" maxlength="4">
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TRANSFERENCIA ── -->
+        <div class="pago-panel" id="panel_transferencia">
+          <p style="font-size:0.84rem;color:#666;margin-bottom:14px;">
+            <i class="fas fa-info-circle me-1" style="color:#8b5cf6;"></i>
+            Realiza la transferencia a estos datos y registra tu referencia:
+          </p>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><div class="transfer-box"><div class="t-label">Banco</div><div class="t-val">BBVA México</div></div></div>
+            <div class="col-6"><div class="transfer-box"><div class="t-label">Titular</div><div class="t-val">Mega Store S.A.</div></div></div>
+            <div class="col-12"><div class="transfer-box"><div class="t-label">CLABE Interbancaria</div><div class="t-val" style="letter-spacing:2px;font-size:0.88rem;">012 180 00123456789 0</div></div></div>
+            <div class="col-6"><div class="transfer-box"><div class="t-label">Cuenta</div><div class="t-val">1234 5678</div></div></div>
+            <div class="col-6"><div class="transfer-box"><div class="t-label">Monto a transferir</div><div class="t-val" style="color:#e03e7c;">${{ total|floatformat:0 }}</div></div></div>
+          </div>
+          <div class="mb-3">
+            <label class="ms-label">Tu Banco de Origen</label>
+            <input type="text" name="banco_origen" class="ms-input" placeholder="Nombre de tu banco">
+          </div>
+          <div class="mb-2">
+            <label class="ms-label">Número de Referencia / Folio</label>
+            <input type="text" name="referencia_transferencia" class="ms-input" placeholder="Número de referencia de la transferencia">
+          </div>
+          <div style="background:#fffbeb;border-radius:8px;padding:11px 14px;font-size:0.8rem;color:#92400e;margin-top:12px;">
+            <i class="fas fa-clock me-1"></i> Tu pedido se procesará en 1–2 días hábiles tras confirmar el pago.
+          </div>
+        </div>
+
+        <!-- ── EFECTIVO ── -->
+        <div class="pago-panel" id="panel_efectivo">
+          <div style="text-align:center;padding:20px 10px;">
+            <div style="font-size:3.5rem;margin-bottom:10px;">💵</div>
+            <p style="font-weight:700;color:#2d1a2e;margin-bottom:6px;">Pago contra entrega</p>
+            <p style="font-size:0.85rem;color:#888;line-height:1.7;">
+              El repartidor llevará tu pedido a la dirección indicada.<br>
+              Ten listo el monto exacto:
+              <strong style="color:#e03e7c;font-size:1.1rem;"> ${{ total|floatformat:0 }}</strong>
+            </p>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-pink w-100 mt-4" style="padding:14px;font-size:1.05rem;">
+          <i class="fas fa-check-circle me-2"></i>Confirmar Compra
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── RESUMEN ─────────────────────────────── -->
+  <div class="col-lg-5">
+    <div style="background:linear-gradient(135deg,#e8e0f5,#c4b5fd);border-radius:14px;padding:24px;box-shadow:0 4px 20px rgba(139,92,246,0.15);position:sticky;top:88px;">
+      <h5 style="font-weight:700;color:#4c1d95;margin-bottom:20px;">Resumen de compra</h5>
+
+      {% for item in items %}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <span style="font-size:0.88rem;font-weight:500;">{{ item.producto.nombre }}</span>
+          {% if item.cantidad > 1 %}
+            <span style="font-size:0.75rem;color:#7c3aed;margin-left:4px;">×{{ item.cantidad }}</span>
+          {% endif %}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-weight:700;color:#4c1d95;">${{ item.subtotal|floatformat:0 }}</span>
+          <a href="{% url 'eliminar_item_carrito' item.producto.id %}"
+            style="color:#ef4444;text-decoration:none;font-size:0.85rem;line-height:1;" title="Quitar">✕</a>
+        </div>
+      </div>
+      {% endfor %}
+
+      <hr style="border-color:rgba(139,92,246,0.3);margin:14px 0;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:0.88rem;color:#6d28d9;">Subtotal</span>
+        <span style="font-weight:600;">${{ subtotal|floatformat:0 }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+        <span style="font-size:0.88rem;color:#6d28d9;">Envío</span>
+        <span style="font-weight:600;">${{ costo_envio|floatformat:0 }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:1.3rem;font-weight:800;color:#4c1d95;">
+        <span>Total</span>
+        <span>${{ total|floatformat:0 }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePago(metodo) {
+  document.querySelectorAll('.pago-panel').forEach(p => p.classList.remove('activo'));
+  const mapa = {
+    'Tarjeta de Crédito': 'panel_tarjeta',
+    'Transferencia':      'panel_transferencia',
+    'Efectivo':           'panel_efectivo',
+  };
+  const id = mapa[metodo];
+  if (id) document.getElementById(id).classList.add('activo');
+}
+
+function fmtCard(inp) {
+  let v = inp.value.replace(/\D/g,'').slice(0,16);
+  inp.value = v.match(/.{1,4}/g)?.join(' ') || v;
+  const raw = inp.value.replace(/\s/g,'');
+  const last4 = raw.slice(-4).padStart(4,'•');
+  document.getElementById('prev_num').textContent =
+    raw.length > 0 ? '•••• •••• •••• ' + last4 : '•••• •••• •••• ••••';
+}
+
+function fmtExp(inp) {
+  let v = inp.value.replace(/\D/g,'').slice(0,4);
+  if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+  inp.value = v;
+  document.getElementById('prev_exp').textContent = v || 'MM/AA';
+}
+
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+  const metodo = document.getElementById('metodoPago').value;
+  if (metodo === 'Tarjeta de Crédito') {
+    const num  = (document.getElementById('inp_num').value||'').replace(/\s/g,'');
+    const nom  = (document.getElementById('inp_nombre').value||'').trim();
+    const exp  = (document.getElementById('inp_exp').value||'');
+    const cvv  = document.querySelector('[name="cvv"]').value;
+    if (num.length < 16 || !nom || exp.length < 5 || cvv.length < 3) {
+      e.preventDefault();
+      alert('Por favor completa todos los datos de tu tarjeta.');
+    }
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Mis Órdenes – Mega Store{% endblock %}
+{% block topbar_title %}Mis Órdenes{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'catalogo' %}"><i class="fas fa-home"></i> Home</a>
+<a href="{% url 'catalogo' %}"><i class="fas fa-box"></i> Catálogo</a>
+<a href="{% url 'mis_ordenes' %}" class="active"><i class="fas fa-clipboard-list"></i> Ordenes</a>
+<a href="{% url 'mis_facturas' %}"><i class="fas fa-file-invoice"></i> Facturas</a>
+<a href="{% url 'ubicaciones' %}"><i class="fas fa-map-marker-alt"></i> Ubicaciones</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header"><h4>Mis Órdenes</h4><p>Historial de todas tus compras</p></div>
+
+<table class="ms-table">
+  <thead>
+    <tr>
+      <th>#</th><th>Fecha</th><th>Productos</th><th>Total</th><th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for orden in ordenes %}
+    <tr>
+      <td><strong>#{{ orden.id }}</strong></td>
+      <td>{{ orden.fecha|date:"d/m/Y" }}</td>
+      <td>
+        {% for item in orden.items.all %}
+          <div style="font-size:0.82rem;">{{ item.cantidad }}x {{ item.producto.nombre }}</div>
+        {% endfor %}
+      </td>
+      <td><strong style="color:#e03e7c;">${{ orden.total|floatformat:0 }}</strong></td>
+      <td>
+        <span class="status-badge badge-{{ orden.estado }}">{{ orden.get_estado_display }}</span>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" style="text-align:center;padding:40px;color:#bbb;">No tienes órdenes aún.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

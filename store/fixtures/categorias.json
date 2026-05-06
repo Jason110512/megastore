@@ -1,0 +1,17 @@
+[
+  {
+    "model": "store.categoria",
+    "pk": 1,
+    "fields": { "nombre": "Electronica", "descripcion": "Productos electrónicos" }
+  },
+  {
+    "model": "store.categoria",
+    "pk": 2,
+    "fields": { "nombre": "Ropa", "descripcion": "Ropa y accesorios" }
+  },
+  {
+    "model": "store.categoria",
+    "pk": 3,
+    "fields": { "nombre": "Deportes", "descripcion": "Artículos deportivos" }
+  }
+]

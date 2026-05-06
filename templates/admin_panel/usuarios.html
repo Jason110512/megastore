@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios – Mega Store{% endblock %}
+{% block topbar_title %}Gestión de Usuarios{% endblock %}
+
+{% block topbar_icons %}
+<a href="#"><i class="fas fa-bell"></i></a>
+<a href="#"><i class="fas fa-shopping-cart"></i></a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Inicio</a>
+<a href="{% url 'admin_productos' %}"><i class="fas fa-box"></i> Gestion de Productos</a>
+<a href="{% url 'admin_pedidos' %}"><i class="fas fa-shopping-cart"></i> Gestion de Pedidos</a>
+<a href="{% url 'gestion_usuarios' %}" class="active"><i class="fas fa-users"></i> Gestion de Usuarios</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header"><h4>Gestión de Usuarios</h4><p>Administra los clientes y administradores</p></div>
+
+<table class="ms-table">
+  <thead>
+    <tr><th>#</th><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+  </thead>
+  <tbody>
+    {% for usuario in usuarios %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td><strong>{{ usuario.username }}</strong></td>
+      <td>{{ usuario.nombre_completo|default:"—" }}</td>
+      <td style="font-size:0.83rem;color:#888;">{{ usuario.correo|default:"—" }}</td>
+      <td>
+        <span style="padding:3px 10px;border-radius:20px;font-size:0.78rem;font-weight:600;
+          background:{% if usuario.rol == 'admin' %}#ede9fe{% else %}#fce7f3{% endif %};
+          color:{% if usuario.rol == 'admin' %}#7c3aed{% else %}#db2777{% endif %};">
+          {{ usuario.get_rol_display }}
+        </span>
+      </td>
+      <td>
+        <span style="padding:3px 10px;border-radius:20px;font-size:0.78rem;font-weight:600;
+          background:{% if usuario.activo %}#d1fae5{% else %}#fee2e2{% endif %};
+          color:{% if usuario.activo %}#065f46{% else %}#991b1b{% endif %};">
+          {% if usuario.activo %}Activo{% else %}Inactivo{% endif %}
+        </span>
+      </td>
+      <td>
+        <div class="d-flex gap-2">
+          <a href="{% url 'editar_usuario' usuario.id %}" class="btn-outline-pink btn btn-sm">
+            <i class="fas fa-edit"></i>
+          </a>
+          <a href="{% url 'toggle_usuario' usuario.id %}" class="btn btn-sm"
+            style="background:{% if usuario.activo %}#fef3c7{% else %}#d1fae5{% endif %};
+            color:{% if usuario.activo %}#92400e{% else %}#065f46{% endif %};border-radius:8px;">
+            {% if usuario.activo %}<i class="fas fa-ban"></i>{% else %}<i class="fas fa-check"></i>{% endif %}
+          </a>
+          {% if usuario != request.user %}
+          <form method="POST" action="{% url 'eliminar_usuario' usuario.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger-ms" onclick="return confirm('¿Eliminar usuario {{ usuario.username }}?')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" style="text-align:center;padding:40px;color:#bbb;">No hay usuarios.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

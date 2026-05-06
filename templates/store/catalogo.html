@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load store_tags %}
+{% block title %}Catálogo – Mega Store{% endblock %}
+{% block topbar_title %}Catálogo de Productos{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'catalogo' %}" class="active"><i class="fas fa-box"></i> Productos</a>
+{% if request.user.is_admin_store %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+{% endif %}
+<a href="{% url 'mis_ordenes' %}"><i class="fas fa-clipboard-list"></i> Ordenes</a>
+<a href="{% url 'mis_facturas' %}"><i class="fas fa-file-invoice"></i> Facturas</a>
+<a href="{% url 'ubicaciones' %}"><i class="fas fa-map-marker-alt"></i> Ubicaciones</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .product-card {
+    background: white; border-radius: 14px; padding: 18px; margin-bottom: 14px;
+    box-shadow: 0 4px 20px rgba(224,62,124,0.10); display: flex; align-items: center;
+    gap: 18px; transition: box-shadow 0.2s, transform 0.2s;
+    border: 1px solid rgba(224,62,124,0.06);
+  }
+  .product-card:hover { box-shadow: 0 8px 32px rgba(224,62,124,0.18); transform: translateY(-2px); }
+  .product-thumb {
+    width: 80px; height: 80px; border-radius: 12px; flex-shrink: 0;
+    background: #f0eaf8; display: flex; align-items: center;
+    justify-content: center; color: #8b5cf6; font-size: 2rem; overflow: hidden;
+  }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  .qty-control { display: flex; align-items: center; gap: 8px; background: #f5f0fc; border-radius: 10px; padding: 4px 10px; }
+  .qty-btn { background: none; border: none; color: #8b5cf6; font-size: 1rem; cursor: pointer; padding: 0 4px; transition: color 0.15s; }
+  .qty-btn:hover { color: #e03e7c; }
+  .qty-num { font-weight: 700; min-width: 22px; text-align: center; color: #2d1a2e; font-size: 0.95rem; }
+  .pocas-badge { background: #fee2e2; color: #dc2626; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+  <div>
+    <h4 style="font-weight:800;margin:0;">Catálogo de Productos</h4>
+    <p style="color:#888;font-size:0.85rem;margin:0;">{{ productos.paginator.count }} producto{{ productos.paginator.count|pluralize }} disponible{{ productos.paginator.count|pluralize }}</p>
+  </div>
+  {% if request.user.is_admin_store %}
+  <a href="{% url 'registrar_producto' %}" class="btn btn-pink"><i class="fas fa-plus me-1"></i> Nuevo Producto</a>
+  {% endif %}
+</div>
+
+<!-- BÚSQUEDA -->
+<form method="GET" style="background:white;border-radius:14px;padding:18px 22px;box-shadow:0 4px 20px rgba(224,62,124,0.08);margin-bottom:22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+  <div style="position:relative;flex:1;min-width:200px;">
+    <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#e03e7c;"></i>
+    <input type="text" name="q" placeholder="Buscar producto..." value="{{ query }}"
+      style="width:100%;padding:11px 16px 11px 44px;border:2px solid #f0ddf5;border-radius:10px;font-size:0.92rem;background:#fdf5fb;outline:none;font-family:'Poppins',sans-serif;">
+  </div>
+  <select name="categoria" class="form-select" style="max-width:180px;border:2px solid #f0ddf5;border-radius:10px;background:#fdf5fb;">
+    <option value="">Todas las categorías</option>
+    {% for cat in categorias %}
+      <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-pink"><i class="fas fa-search me-1"></i> Buscar</button>
+  {% if query or request.GET.categoria %}
+    <a href="{% url 'catalogo' %}" class="btn btn-outline-pink">Limpiar</a>
+  {% endif %}
+</form>
+
+<!-- LISTA -->
+{% for producto in productos %}
+<div class="product-card">
+  <div class="product-thumb">
+    {% if producto.imagen %}<img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+    {% else %}<i class="fas fa-box"></i>{% endif %}
+  </div>
+
+  <div style="flex:1;min-width:0;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <a href="{% url 'detalle_producto' producto.id %}" style="font-weight:700;font-size:1rem;color:#2d1a2e;text-decoration:none;">{{ producto.nombre }}</a>
+      <span style="color:#f59e0b;font-size:0.9rem;">
+        {% for i in "12345" %}{% if forloop.counter <= producto.estrellas %}★{% else %}☆{% endif %}{% endfor %}
+      </span>
+      {% if producto.pocas_piezas %}<span class="pocas-badge"><i class="fas fa-exclamation-triangle me-1"></i>Pocas Piezas</span>{% endif %}
+    </div>
+    <div style="color:#888;font-size:0.82rem;margin-top:4px;line-height:1.5;">{{ producto.descripcion|truncatechars:120 }}</div>
+    {% if producto.categoria %}
+    <span style="background:#f0eaf8;color:#8b5cf6;font-size:0.75rem;font-weight:600;padding:2px 10px;border-radius:6px;margin-top:6px;display:inline-block;">{{ producto.categoria.nombre }}</span>
+    {% endif %}
+  </div>
+
+  <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+    <div style="font-size:1.5rem;font-weight:800;color:#2d1a2e;">${{ producto.precio|floatformat:0 }}</div>
+    <div class="qty-control">
+      <a href="{% url 'quitar_carrito' producto.id %}" class="qty-btn"><i class="fas fa-minus"></i></a>
+      <span class="qty-num">{{ carrito_items|get_item:producto.id }}</span>
+      <a href="{% url 'agregar_carrito' producto.id %}" class="qty-btn"><i class="fas fa-plus"></i></a>
+    </div>
+    <a href="{% url 'agregar_carrito' producto.id %}" class="btn btn-pink btn-sm">
+      <i class="fas fa-cart-plus me-1"></i> Agregar
+    </a>
+    {% if request.user.is_admin_store %}
+    <a href="{% url 'actualizar_producto' producto.id %}" class="btn btn-sm btn-outline-pink"><i class="fas fa-edit"></i></a>
+    {% endif %}
+  </div>
+</div>
+{% empty %}
+<div style="text-align:center;padding:80px;background:white;border-radius:14px;">
+  <i class="fas fa-box-open" style="font-size:3.5rem;color:#f0ddf5;margin-bottom:16px;"></i>
+  <h6 style="color:#bbb;">No se encontraron productos</h6>
+</div>
+{% endfor %}
+
+<!-- PAGINACIÓN -->
+{% if productos.has_other_pages %}
+<div style="display:flex;justify-content:center;gap:8px;margin-top:24px;align-items:center;">
+  {% if productos.has_previous %}
+  <a href="?page={{ productos.previous_page_number }}&q={{ query }}" class="btn btn-outline-pink btn-sm"><i class="fas fa-chevron-left"></i></a>
+  {% endif %}
+  {% for num in productos.paginator.page_range %}
+    {% if productos.number == num %}
+      <span style="background:#e03e7c;color:white;border-radius:8px;padding:6px 14px;font-weight:700;font-size:0.85rem;">{{ num }}</span>
+    {% elif num > productos.number|add:'-3' and num < productos.number|add:'3' %}
+      <a href="?page={{ num }}&q={{ query }}" style="background:white;color:#e03e7c;border:2px solid #f0ddf5;border-radius:8px;padding:6px 14px;font-size:0.85rem;text-decoration:none;">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+  {% if productos.has_next %}
+  <a href="?page={{ productos.next_page_number }}&q={{ query }}" class="btn btn-outline-pink btn-sm"><i class="fas fa-chevron-right"></i></a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

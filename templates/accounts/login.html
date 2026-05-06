@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mega Store – Iniciar Sesión</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #e03e7c; --pink-light: #f9c6e0; --purple: #8b5cf6; --purple-light: #c4b5fd;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; }
+
+  .split-left {
+    flex: 1; background: linear-gradient(135deg, #f06fa1 0%, #e03e7c 50%, #c0246a 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px; position: relative; overflow: hidden;
+  }
+  .split-left::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 300px; height: 300px; background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .split-left::after {
+    content: ''; position: absolute; bottom: -80px; left: -40px;
+    width: 200px; height: 200px; background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .left-content { text-align: center; color: white; z-index: 1; }
+  .left-content h1 { font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 900; line-height: 1; }
+  .left-content p { font-size: 0.95rem; opacity: 0.85; margin-top: 12px; }
+  .bags-icon { font-size: 5rem; margin-bottom: 20px; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.2)); }
+
+  .split-right {
+    width: 480px; background: white; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 52px 48px;
+  }
+  .form-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--purple); margin-bottom: 8px; }
+  .form-sub { font-size: 0.85rem; color: #888; margin-bottom: 32px; }
+
+  .input-group-ms { position: relative; margin-bottom: 18px; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #bbb; font-size: 1rem; }
+  .input-group-ms input {
+    width: 100%; padding: 12px 40px 12px 42px; border: 2px solid #f0e0f0;
+    border-radius: 10px; font-size: 0.92rem; font-family: 'Poppins', sans-serif;
+    outline: none; transition: border-color 0.2s; background: #fdf5fb;
+  }
+  .input-group-ms input:focus { border-color: var(--pink); background: white; }
+  .toggle-pass { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #bbb; }
+
+  .btn-login {
+    width: 100%; padding: 13px; background: var(--purple); color: white; border: none;
+    border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: 'Poppins', sans-serif; transition: background 0.2s; margin-top: 8px;
+  }
+  .btn-login:hover { background: #7c3aed; }
+  .forgot { text-align: center; font-size: 0.83rem; color: #999; margin-top: 14px; }
+  .forgot a { color: var(--pink); text-decoration: none; font-weight: 500; }
+  .register-link { text-align: center; font-size: 0.85rem; color: #888; margin-top: 10px; }
+  .register-link a { color: var(--purple); font-weight: 600; text-decoration: none; }
+  .error-msg { background: #fee2e2; color: #991b1b; border-radius: 8px; padding: 10px 14px; font-size: 0.84rem; margin-bottom: 16px; }
+
+  @media (max-width: 768px) {
+    .split-left { display: none; }
+    .split-right { width: 100%; padding: 40px 28px; }
+  }
+</style>
+</head>
+<body>
+  <div class="split-left">
+    <div class="left-content">
+      <div class="bags-icon">🛍️</div>
+      <h1>MEGA<br>STORE</h1>
+      <p>Tu tienda de confianza con los mejores productos</p>
+    </div>
+  </div>
+
+  <div class="split-right">
+    <div class="form-title">Bienvenido</div>
+    <div class="form-sub">Ingresa tus credenciales para continuar</div>
+
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="error-msg"><i class="fas fa-exclamation-circle me-2"></i>{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" style="width:100%">
+      {% csrf_token %}
+      <div class="input-group-ms">
+        <i class="fas fa-user input-icon"></i>
+        <input type="text" name="username" placeholder="Usuario" required value="{{ form.username.value|default:'' }}">
+      </div>
+      <div class="input-group-ms">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" name="password" id="passInput" placeholder="Contraseña" required>
+        <span class="toggle-pass" onclick="togglePass()"><i class="fas fa-eye-slash" id="eyeIcon"></i></span>
+      </div>
+      <button type="submit" class="btn-login">Iniciar Sesión</button>
+    </form>
+
+    <div class="forgot"><a href="{% url 'password_reset' %}">¿Olvidó su contraseña?</a></div>
+    <div class="register-link">¿No tiene Cuenta? <a href="{% url 'registro' %}">Registrarse</a></div>
+  </div>
+
+<script>
+function togglePass() {
+  const inp = document.getElementById('passInput');
+  const icon = document.getElementById('eyeIcon');
+  if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye'; }
+  else { inp.type = 'password'; icon.className = 'fas fa-eye-slash'; }
+}
+</script>
+</body>
+</html>

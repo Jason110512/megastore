@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}Ubicaciones – Mega Store{% endblock %}
+{% block topbar_title %}Nuestra Ubicación{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'catalogo' %}"><i class="fas fa-home"></i> Home</a>
+<a href="{% url 'catalogo' %}"><i class="fas fa-box"></i> Productos</a>
+<a href="{% url 'mis_ordenes' %}"><i class="fas fa-clipboard-list"></i> Ordenes</a>
+<a href="{% url 'ubicaciones' %}" class="active"><i class="fas fa-map-marker-alt"></i> Ubicación</a>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS (OpenStreetMap – sin API Key) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  #mapa { height: 420px; border-radius: 14px; box-shadow: 0 4px 20px rgba(139,92,246,0.18); z-index: 1; }
+  .sucursal-card {
+    background: white; border-radius: 14px; padding: 20px 22px;
+    box-shadow: 0 4px 16px rgba(224,62,124,0.10);
+    border: 2px solid transparent; cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .sucursal-card:hover, .sucursal-card.activa { border-color: #e03e7c; transform: translateY(-2px); }
+  .sucursal-card .nombre { font-weight:700; color:#2d1a2e; font-size:0.95rem; margin-bottom:6px; }
+  .sucursal-card .detalle { font-size:0.82rem; color:#888; display:flex; align-items:flex-start; gap:7px; margin-bottom:4px; }
+  .sucursal-card .detalle i { color:#8b5cf6; margin-top:2px; flex-shrink:0; }
+  .empresa-card {
+    background: linear-gradient(135deg,#e8e0f5,#c4b5fd);
+    border-radius: 14px; padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .leaflet-popup-content-wrapper { border-radius: 12px !important; font-family: 'Poppins', sans-serif !important; }
+  .popup-title { font-weight: 700; color: #e03e7c; font-size: 0.95rem; margin-bottom: 4px; }
+  .popup-text  { font-size: 0.82rem; color: #666; }
+  .map-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .map-tab {
+    padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; border: 2px solid #f0ddf5; background: white; color: #8b5cf6;
+    transition: all 0.2s;
+  }
+  .map-tab.activo { background: #e03e7c; color: white; border-color: #e03e7c; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h4><i class="fas fa-map-marker-alt me-2" style="color:#e03e7c;"></i>Nuestra Ubicación</h4>
+  <p>Conoce nuestras sucursales. Estamos ubicados para servirte mejor</p>
+</div>
+
+<div class="row g-4">
+
+  <!-- ── INFO SUCURSALES ─────────────────── -->
+  <div class="col-lg-4">
+
+    <!-- Card empresa -->
+    <div class="empresa-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="background:white;border-radius:10px;padding:8px 12px;">
+          <i class="fas fa-shopping-bag" style="color:#e03e7c;font-size:1.4rem;"></i>
+        </div>
+        <div>
+          <div style="font-weight:800;color:#4c1d95;font-size:1rem;">Mega Store</div>
+          <div style="font-size:0.75rem;color:#7c3aed;">Tu tienda de confianza</div>
+        </div>
+      </div>
+      <p style="font-size:0.83rem;color:#5a3e7a;line-height:1.7;margin:0;">
+        Mega Store es tu tienda de confianza, ofreciendo los mejores productos a precios competitivos.
+        Siempre cerca de ti para brindarte el mejor servicio y atención personalizada.
+      </p>
+    </div>
+
+    <!-- Sucursales -->
+    <h6 style="font-weight:700;color:#e03e7c;margin-bottom:12px;">
+      <i class="fas fa-store me-2"></i>Nuestras Sucursales
+    </h6>
+
+    <div class="sucursal-card activa mb-3" onclick="irASucursal(0)" id="card_0">
+      <div class="nombre"><i class="fas fa-map-pin me-2" style="color:#e03e7c;"></i>Mega Store Centro</div>
+      <div class="detalle"><i class="fas fa-map-marker-alt"></i><span>Calle Principal #123, Centro, Ciudad de México, CP 06000</span></div>
+      <div class="detalle"><i class="fas fa-phone"></i><span>(55) 1234-5678</span></div>
+      <div class="detalle"><i class="fas fa-clock"></i><span>Lun–Vie 9:00–19:00 | Sáb 10:00–17:00</span></div>
+      <a href="https://maps.openstreetmap.org/?mlat=19.4326&mlon=-99.1332&zoom=15" target="_blank"
+        style="display:inline-block;margin-top:8px;font-size:0.78rem;color:#8b5cf6;font-weight:600;text-decoration:none;">
+        <i class="fas fa-directions me-1"></i>Cómo llegar →
+      </a>
+    </div>
+
+    <div class="sucursal-card mb-3" onclick="irASucursal(1)" id="card_1">
+      <div class="nombre"><i class="fas fa-map-pin me-2" style="color:#8b5cf6;"></i>Mega Store Norte</div>
+      <div class="detalle"><i class="fas fa-map-marker-alt"></i><span>Avenida Norte #456, Col. Industrial, Ciudad de México, CP 07000</span></div>
+      <div class="detalle"><i class="fas fa-phone"></i><span>(55) 9876-5432</span></div>
+      <div class="detalle"><i class="fas fa-clock"></i><span>Lun–Vie 9:00–20:00 | Sáb 10:00–18:00</span></div>
+      <a href="https://maps.openstreetmap.org/?mlat=19.4800&mlon=-99.1200&zoom=15" target="_blank"
+        style="display:inline-block;margin-top:8px;font-size:0.78rem;color:#8b5cf6;font-weight:600;text-decoration:none;">
+        <i class="fas fa-directions me-1"></i>Cómo llegar →
+      </a>
+    </div>
+
+    <div class="sucursal-card" onclick="irASucursal(2)" id="card_2">
+      <div class="nombre"><i class="fas fa-map-pin me-2" style="color:#f59e0b;"></i>Mega Store Sur</div>
+      <div class="detalle"><i class="fas fa-map-marker-alt"></i><span>Blvd. Sur #789, Col. Pedregal, Ciudad de México, CP 04500</span></div>
+      <div class="detalle"><i class="fas fa-phone"></i><span>(55) 5555-0000</span></div>
+      <div class="detalle"><i class="fas fa-clock"></i><span>Lun–Dom 10:00–20:00</span></div>
+      <a href="https://maps.openstreetmap.org/?mlat=19.3500&mlon=-99.1700&zoom=15" target="_blank"
+        style="display:inline-block;margin-top:8px;font-size:0.78rem;color:#8b5cf6;font-weight:600;text-decoration:none;">
+        <i class="fas fa-directions me-1"></i>Cómo llegar →
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ── MAPA ───────────────────────────── -->
+  <div class="col-lg-8">
+    <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 4px 20px rgba(224,62,124,0.08);">
+
+      <!-- Tabs de sucursales -->
+      <div class="map-tabs">
+        <button class="map-tab activo" onclick="irASucursal(0);setTab(this)">🏪 Centro</button>
+        <button class="map-tab" onclick="irASucursal(1);setTab(this)">🏪 Norte</button>
+        <button class="map-tab" onclick="irASucursal(2);setTab(this)">🏪 Sur</button>
+        <button class="map-tab" onclick="verTodas();setTab(this)">🗺️ Ver todas</button>
+      </div>
+
+      <!-- Mapa Leaflet -->
+      <div id="mapa"></div>
+
+      <div style="margin-top:12px;font-size:0.78rem;color:#bbb;text-align:right;">
+        <i class="fas fa-map me-1"></i>Mapa: OpenStreetMap (sin costo, sin API Key)
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Sucursales con coordenadas reales CDMX
+const sucursales = [
+  {
+    nombre: 'Mega Store Centro',
+    lat: 19.4326, lng: -99.1332,
+    direccion: 'Calle Principal #123, Centro, CDMX',
+    tel: '(55) 1234-5678',
+    color: '#e03e7c'
+  },
+  {
+    nombre: 'Mega Store Norte',
+    lat: 19.4800, lng: -99.1200,
+    direccion: 'Avenida Norte #456, Col. Industrial, CDMX',
+    tel: '(55) 9876-5432',
+    color: '#8b5cf6'
+  },
+  {
+    nombre: 'Mega Store Sur',
+    lat: 19.3500, lng: -99.1700,
+    direccion: 'Blvd. Sur #789, Col. Pedregal, CDMX',
+    tel: '(55) 5555-0000',
+    color: '#f59e0b'
+  }
+];
+
+// Íconos personalizados por color
+function makeIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      background:${color};width:34px;height:34px;border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);border:3px solid white;
+      box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    "></div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+    popupAnchor: [0, -36]
+  });
+}
+
+// Inicializar mapa centrado en CDMX
+const mapa = L.map('mapa').setView([19.4326, -99.1332], 11);
+
+// Capa base OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 19
+}).addTo(mapa);
+
+// Agregar marcadores
+const marcadores = sucursales.map((s, i) => {
+  const m = L.marker([s.lat, s.lng], { icon: makeIcon(s.color) }).addTo(mapa);
+  m.bindPopup(`
+    <div style="font-family:'Poppins',sans-serif;min-width:180px;">
+      <div style="font-weight:700;color:${s.color};font-size:0.95rem;margin-bottom:6px;">
+        🛍️ ${s.nombre}
+      </div>
+      <div style="font-size:0.82rem;color:#555;margin-bottom:3px;">
+        <i class="fas fa-map-marker-alt" style="color:#8b5cf6;margin-right:4px;"></i>${s.direccion}
+      </div>
+      <div style="font-size:0.82rem;color:#555;">
+        <i class="fas fa-phone" style="color:#8b5cf6;margin-right:4px;"></i>${s.tel}
+      </div>
+    </div>
+  `, { maxWidth: 260 });
+  return m;
+});
+
+// Abrir popup del primero al cargar
+setTimeout(() => marcadores[0].openPopup(), 500);
+
+function irASucursal(idx) {
+  const s = sucursales[idx];
+  mapa.flyTo([s.lat, s.lng], 15, { duration: 1.2 });
+  setTimeout(() => marcadores[idx].openPopup(), 1300);
+  // Activar card
+  document.querySelectorAll('.sucursal-card').forEach((c, i) => {
+    c.classList.toggle('activa', i === idx);
+  });
+}
+
+function verTodas() {
+  const grupo = L.featureGroup(marcadores);
+  mapa.flyToBounds(grupo.getBounds().pad(0.15), { duration: 1.2 });
+  document.querySelectorAll('.sucursal-card').forEach(c => c.classList.remove('activa'));
+}
+
+function setTab(el) {
+  document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('activo'));
+  el.classList.add('activo');
+}
+</script>
+{% endblock %}

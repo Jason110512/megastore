@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Pedidos Admin – Mega Store{% endblock %}
+{% block topbar_title %}Gestión de Pedidos{% endblock %}
+
+{% block topbar_icons %}
+<a href="{% url 'admin_pedidos' %}"><i class="fas fa-bell"></i></a>
+<a href="#"><i class="fas fa-shopping-cart"></i></a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Inicio</a>
+<a href="{% url 'admin_productos' %}"><i class="fas fa-box"></i> Gestion de Productos</a>
+<a href="{% url 'admin_pedidos' %}" class="active"><i class="fas fa-shopping-cart"></i> Gestion de Pedidos</a>
+<a href="{% url 'gestion_usuarios' %}"><i class="fas fa-users"></i> Gestion de Usuarios</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header"><h4>Gestión de Pedidos</h4><p>Administra todas las órdenes de la tienda</p></div>
+
+<table class="ms-table">
+  <thead>
+    <tr><th>#</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
+  </thead>
+  <tbody>
+    {% for orden in ordenes %}
+    <tr>
+      <td><strong>#{{ orden.id }}</strong></td>
+      <td>
+        <div style="font-weight:500;">{{ orden.usuario.nombre_completo|default:orden.usuario.username }}</div>
+        <div style="font-size:0.78rem;color:#aaa;">{{ orden.items.first.producto.nombre|default:"—" }}</div>
+      </td>
+      <td style="font-size:0.83rem;">{{ orden.fecha|date:"d/m/Y" }}</td>
+      <td><strong style="color:#e03e7c;">${{ orden.total|floatformat:0 }}</strong></td>
+      <td><span class="status-badge badge-{{ orden.estado }}">{{ orden.get_estado_display }}</span></td>
+      <td>
+        <div class="d-flex gap-2">
+          {% if orden.estado == 'pendiente' %}
+          <form method="POST" action="{% url 'aprobar_orden' orden.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm" style="background:#10b981;color:white;border-radius:8px;padding:5px 12px;font-size:0.8rem;font-weight:600;border:none;">Aprobar</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{% url 'eliminar_orden' orden.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger-ms" onclick="return confirm('¿Eliminar orden #{{ orden.id }}?')">Eliminar</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" style="text-align:center;padding:40px;color:#bbb;">No hay pedidos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

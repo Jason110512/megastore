@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} – Mega Store{% endblock %}
+{% block topbar_title %}{{ titulo }}{% endblock %}
+
+{% block topbar_icons %}
+<a href="{% url 'admin_pedidos' %}"><i class="fas fa-bell"></i></a>
+<a href="#"><i class="fas fa-shopping-cart"></i></a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-home"></i> Menu Principal</a>
+<a href="{% url 'admin_productos' %}" class="active"><i class="fas fa-box"></i> Productos</a>
+<a href="{% url 'admin_pedidos' %}"><i class="fas fa-clipboard-list"></i> Ordenes</a>
+<a href="{% url 'gestion_usuarios' %}"><i class="fas fa-users"></i> Usuarios</a>
+<a href="{% url 'mis_facturas' %}"><i class="fas fa-file-invoice"></i> Facturas</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .section-card {
+    background: white; border-radius: 14px; padding: 24px 28px;
+    box-shadow: 0 4px 20px rgba(224,62,124,0.08); margin-bottom: 20px;
+  }
+  .section-title {
+    font-weight: 700; color: #2d1a2e; font-size: 0.95rem;
+    margin-bottom: 18px; padding-bottom: 10px;
+    border-bottom: 2px solid #f0ddf5; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title i { color: #e03e7c; }
+  .img-upload-box {
+    background: #f5f0fa; border-radius: 12px; padding: 20px;
+    text-align: center; border: 2px dashed #c4b5fd; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .img-upload-box:hover { border-color: #e03e7c; }
+  .img-preview {
+    width: 100%; height: 120px; object-fit: cover;
+    border-radius: 10px; margin-bottom: 8px; display: none;
+  }
+  .form-label { font-size: 0.83rem; font-weight: 600; color: #5a4060; margin-bottom: 4px; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #fdf5fb; border-radius: 10px; }
+  .check-row label { font-size: 0.88rem; font-weight: 600; color: #2d1a2e; margin: 0; cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div>
+    <h5 style="font-weight:800;margin:0;">{{ titulo }}</h5>
+    <p style="color:#888;font-size:0.82rem;margin:0;">Completa todos los campos del producto</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'admin_productos' %}" class="btn btn-outline-pink">
+      <i class="fas fa-arrow-left me-1"></i> Cancelar
+    </a>
+    <button type="submit" form="productoForm" class="btn btn-pink">
+      <i class="fas fa-save me-1"></i> {{ titulo }}
+    </button>
+  </div>
+</div>
+
+{% if form.errors %}
+<div style="background:#fee2e2;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:0.85rem;">
+  <i class="fas fa-exclamation-circle me-2"></i>
+  <strong>Corrige los siguientes errores:</strong>
+  {% for field, errors in form.errors.items %}
+    {% for error in errors %} — {{ error }}{% endfor %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" id="productoForm">
+  {% csrf_token %}
+  <div class="row g-3">
+
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="col-lg-8">
+
+      <!-- Información básica -->
+      <div class="section-card">
+        <div class="section-title"><i class="fas fa-tag"></i> Información Básica</div>
+        <div class="mb-3">
+          <label class="form-label">Nombre del producto *</label>
+          <input type="text" name="nombre" class="form-control"
+            placeholder="Escribe el nombre del producto..."
+            value="{{ form.nombre.value|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descripción</label>
+          <textarea name="descripcion" class="form-control" rows="4"
+            placeholder="Describe el producto: características, materiales, uso...">{{ form.descripcion.value|default:'' }}</textarea>
+        </div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">Categoría</label>
+            <select name="categoria" class="form-select">
+              <option value="">Sin categoría</option>
+              {% for cat in form.categoria.field.queryset %}
+                <option value="{{ cat.id }}"
+                  {% if form.categoria.value|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>
+                  {{ cat.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Estrellas (1-5)</label>
+            <select name="estrellas" class="form-select">
+              {% for i in "12345" %}
+                <option value="{{ forloop.counter }}"
+                  {% if form.estrellas.value == forloop.counter|stringformat:"s" %}selected{% endif %}>
+                  {{ forloop.counter }} ⭐
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="form-label">Número de reseñas</label>
+          <input type="number" name="num_resenas" class="form-control"
+            placeholder="0" min="0" value="{{ form.num_resenas.value|default:'0' }}">
+        </div>
+      </div>
+
+      <!-- Precio y stock -->
+      <div class="section-card">
+        <div class="section-title"><i class="fas fa-dollar-sign"></i> Precio y Stock</div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">Precio de venta *</label>
+            <input type="number" name="precio" class="form-control"
+              placeholder="$0.00" step="0.01" required
+              value="{{ form.precio.value|default:'' }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Precio original (antes de descuento)</label>
+            <input type="number" name="precio_original" class="form-control"
+              placeholder="$0.00 (opcional)" step="0.01"
+              value="{{ form.precio_original.value|default:'' }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Stock / Inventario *</label>
+            <input type="number" name="stock" class="form-control"
+              placeholder="0" min="0" required
+              value="{{ form.stock.value|default:'' }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Meses sin intereses</label>
+            <input type="number" name="meses_sin_intereses" class="form-control"
+              placeholder="0 = no aplica" min="0"
+              value="{{ form.meses_sin_intereses.value|default:'0' }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Variantes -->
+      <div class="section-card">
+        <div class="section-title"><i class="fas fa-palette"></i> Variantes del Producto</div>
+        <div class="mb-3">
+          <label class="form-label">Colores disponibles</label>
+          <input type="text" name="colores" class="form-control"
+            placeholder="Ej: Blanco,Negro,Rosa,Azul,Verde"
+            value="{{ form.colores.value|default:'' }}">
+          <div style="font-size:0.75rem;color:#aaa;margin-top:4px;">
+            <i class="fas fa-info-circle me-1"></i>Separa con comas. Usa nombres en español o códigos hex (#FF0000)
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tallas disponibles</label>
+          <input type="text" name="tallas" class="form-control"
+            placeholder="Ej: XS,S,M,L,XL,XXL  o  38,39,40,41,42"
+            value="{{ form.tallas.value|default:'' }}">
+          <div style="font-size:0.75rem;color:#aaa;margin-top:4px;">
+            <i class="fas fa-info-circle me-1"></i>Separa con comas
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkboxes -->
+      <div class="section-card">
+        <div class="section-title"><i class="fas fa-toggle-on"></i> Opciones</div>
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="check-row">
+              <input type="checkbox" name="disponible" id="disponible"
+                class="form-check-input" style="width:20px;height:20px;"
+                {% if form.disponible.value %}checked{% elif not form.instance.pk %}checked{% endif %}>
+              <label for="disponible">
+                <i class="fas fa-eye me-1" style="color:#10b981;"></i>Producto Visible
+                <div style="font-size:0.75rem;color:#aaa;font-weight:400;">Aparece en el catálogo</div>
+              </label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="check-row">
+              <input type="checkbox" name="envio_gratis" id="envio_gratis"
+                class="form-check-input" style="width:20px;height:20px;"
+                {% if form.envio_gratis.value %}checked{% endif %}>
+              <label for="envio_gratis">
+                <i class="fas fa-truck me-1" style="color:#8b5cf6;"></i>Envío Gratis
+                <div style="font-size:0.75rem;color:#aaa;font-weight:400;">Se muestra en el detalle</div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUMNA DERECHA — IMÁGENES -->
+    <div class="col-lg-4">
+      <div class="section-card" style="position:sticky;top:88px;">
+        <div class="section-title"><i class="fas fa-images"></i> Imágenes del Producto</div>
+
+        <!-- Imagen principal -->
+        <div class="mb-3">
+          <label class="form-label">Imagen Principal *</label>
+          <div class="img-upload-box" onclick="document.getElementById('img1').click()">
+            {% if producto and producto.imagen %}
+              <img src="{{ producto.imagen.url }}" class="img-preview" id="prev1" style="display:block;">
+            {% else %}
+              <img class="img-preview" id="prev1">
+            {% endif %}
+            <i class="fas fa-cloud-upload-alt" style="font-size:1.8rem;color:#c4b5fd;margin-bottom:6px;" id="icon1"></i>
+            <div style="font-size:0.82rem;color:#8b5cf6;font-weight:600;">Subir imagen principal</div>
+            <div style="font-size:0.72rem;color:#aaa;margin-top:3px;">JPG, PNG, WEBP • Máx 5MB</div>
+          </div>
+          <input type="file" id="img1" name="imagen" accept=".jpg,.jpeg,.png,.webp"
+            style="display:none;" onchange="previewImg(this,'prev1','icon1')">
+        </div>
+
+        <!-- Imagen 2 -->
+        <div class="mb-3">
+          <label class="form-label">Imagen 2 (opcional)</label>
+          <div class="img-upload-box" onclick="document.getElementById('img2').click()">
+            {% if producto and producto.imagen2 %}
+              <img src="{{ producto.imagen2.url }}" class="img-preview" id="prev2" style="display:block;">
+            {% else %}
+              <img class="img-preview" id="prev2">
+            {% endif %}
+            <i class="fas fa-plus" style="font-size:1.5rem;color:#c4b5fd;" id="icon2"></i>
+          </div>
+          <input type="file" id="img2" name="imagen2" accept=".jpg,.jpeg,.png,.webp"
+            style="display:none;" onchange="previewImg(this,'prev2','icon2')">
+        </div>
+
+        <!-- Imágenes 3 y 4 en fila -->
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">Imagen 3</label>
+            <div class="img-upload-box" style="padding:12px;" onclick="document.getElementById('img3').click()">
+              {% if producto and producto.imagen3 %}
+                <img src="{{ producto.imagen3.url }}" class="img-preview" id="prev3" style="display:block;height:70px;">
+              {% else %}
+                <img class="img-preview" id="prev3" style="height:70px;">
+              {% endif %}
+              <i class="fas fa-plus" style="color:#c4b5fd;" id="icon3"></i>
+            </div>
+            <input type="file" id="img3" name="imagen3" accept=".jpg,.jpeg,.png,.webp"
+              style="display:none;" onchange="previewImg(this,'prev3','icon3')">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Imagen 4</label>
+            <div class="img-upload-box" style="padding:12px;" onclick="document.getElementById('img4').click()">
+              {% if producto and producto.imagen4 %}
+                <img src="{{ producto.imagen4.url }}" class="img-preview" id="prev4" style="display:block;height:70px;">
+              {% else %}
+                <img class="img-preview" id="prev4" style="height:70px;">
+              {% endif %}
+              <i class="fas fa-plus" style="color:#c4b5fd;" id="icon4"></i>
+            </div>
+            <input type="file" id="img4" name="imagen4" accept=".jpg,.jpeg,.png,.webp"
+              style="display:none;" onchange="previewImg(this,'prev4','icon4')">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImg(input, previewId, iconId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById(previewId);
+    const icon = document.getElementById(iconId);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    if (icon) icon.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+{% endblock %}

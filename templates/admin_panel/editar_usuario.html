@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Editar Usuario – Mega Store{% endblock %}
+{% block topbar_title %}Editar Usuario{% endblock %}
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-home"></i> Inicio</a>
+<a href="{% url 'gestion_usuarios' %}" class="active"><i class="fas fa-users"></i> Usuarios</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:0 auto;">
+  <div class="page-header"><h4>Editar Usuario: {{ usuario.username }}</h4></div>
+  <div style="background:white;border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(224,62,124,0.1);">
+    <form method="POST">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div style="font-size:0.78rem;color:#dc2626;">{{ field.errors.0 }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="d-flex gap-3">
+        <button type="submit" class="btn-pink btn">Guardar cambios</button>
+        <a href="{% url 'gestion_usuarios' %}" class="btn" style="background:#e5e7eb;border-radius:10px;">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

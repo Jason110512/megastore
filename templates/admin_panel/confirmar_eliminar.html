@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Confirmar Eliminación – Mega Store{% endblock %}
+{% block topbar_title %}Confirmar Acción{% endblock %}
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-home"></i> Inicio</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:80px auto;text-align:center;">
+  <div style="background:white;border-radius:18px;padding:40px 32px;box-shadow:0 8px 40px rgba(224,62,124,0.15);">
+    <div style="font-size:3.5rem;margin-bottom:16px;">⚠️</div>
+    <h5 style="font-weight:700;margin-bottom:8px;">¿Eliminar {{ tipo }}?</h5>
+    <p style="color:#666;font-size:0.9rem;">¿Estás seguro que deseas eliminar <strong>{{ objeto }}</strong>?</p>
+    <p style="color:#ef4444;font-weight:600;font-size:0.85rem;margin:16px 0 28px;">¡Esta acción no se puede deshacer!</p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="javascript:history.back()" class="btn" style="background:#e5e7eb;border-radius:10px;padding:10px 28px;font-weight:600;">Cancelar</a>
+      <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background:#ef4444;color:white;border-radius:10px;padding:10px 28px;font-weight:600;">Eliminar</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

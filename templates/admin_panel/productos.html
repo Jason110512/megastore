@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Productos Admin – Mega Store{% endblock %}
+{% block topbar_title %}Gestión de Productos{% endblock %}
+
+{% block topbar_icons %}
+<a href="{% url 'admin_pedidos' %}" title="Notificaciones"><i class="fas fa-bell"></i></a>
+<a href="#" title="Carrito"><i class="fas fa-shopping-cart"></i></a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Inicio</a>
+<a href="{% url 'admin_productos' %}" class="active"><i class="fas fa-box"></i> Gestion de Productos</a>
+<a href="{% url 'admin_pedidos' %}"><i class="fas fa-shopping-cart"></i> Gestion de Pedidos</a>
+<a href="{% url 'gestion_usuarios' %}"><i class="fas fa-users"></i> Gestion de Usuarios</a>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div>
+    <h5 style="font-weight:700;margin:0;">Productos</h5>
+  </div>
+  <a href="{% url 'registrar_producto' %}" class="btn-pink btn">
+    <i class="fas fa-plus me-1"></i> Registrar Producto
+  </a>
+</div>
+
+<!-- BUSQUEDA -->
+<form method="GET" class="d-flex gap-2 mb-3">
+  <div class="input-group" style="max-width:400px;">
+    <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ query }}"
+      style="border:2px solid #f0ddf5;border-radius:10px 0 0 10px;background:#fdf5fb;">
+    <button type="submit" class="btn" style="background:#8b5cf6;color:white;border-radius:0 10px 10px 0;">
+      <i class="fas fa-search"></i>
+    </button>
+  </div>
+  <button type="button" class="btn-outline-pink btn">Filtrar</button>
+</form>
+
+<!-- TABLA -->
+<table class="ms-table">
+  <thead>
+    <tr><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr>
+  </thead>
+  <tbody>
+    {% for producto in productos %}
+    <tr>
+      <td>
+        {% if producto.imagen %}
+          <img src="{{ producto.imagen.url }}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+        {% else %}
+          <div style="width:48px;height:48px;border-radius:8px;background:#e8e0f5;display:flex;align-items:center;justify-content:center;color:#8b5cf6;">
+            <i class="fas fa-box"></i>
+          </div>
+        {% endif %}
+      </td>
+      <td><strong>{{ producto.nombre }}</strong></td>
+      <td><span style="font-size:0.83rem;color:#8b5cf6;">{{ producto.categoria.nombre|default:"—" }}</span></td>
+      <td><strong style="color:#e03e7c;">${{ producto.precio|floatformat:0 }}</strong></td>
+      <td>
+        <span style="font-weight:600;{% if producto.pocas_piezas %}color:#ef4444;{% endif %}">{{ producto.stock }} piezas</span>
+      </td>
+      <td>
+        <div class="d-flex gap-2 align-items-center">
+          <a href="{% url 'actualizar_producto' producto.id %}" class="btn-outline-pink btn btn-sm">
+            <i class="fas fa-edit"></i>
+          </a>
+          <button class="btn-danger-ms" onclick="showDeleteModal({{ producto.id }}, '{{ producto.nombre|escapejs }}')">
+            Eliminar
+          </button>
+          <a href="#" class="btn btn-sm" style="color:#8b5cf6;">•••</a>
+        </div>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" style="text-align:center;padding:40px;color:#bbb;">No hay productos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- PAGINACIÓN -->
+{% if productos.has_other_pages %}
+<div class="d-flex justify-content-end gap-2 mt-3">
+  {% if productos.has_previous %}
+    <a href="?page={{ productos.previous_page_number }}&q={{ query }}" class="btn-outline-pink btn btn-sm">«</a>
+  {% endif %}
+  <span class="btn btn-sm" style="background:#f0ddf5;color:#8b5cf6;cursor:default;">Pág {{ productos.number }}</span>
+  {% if productos.has_next %}
+    <a href="?page={{ productos.next_page_number }}&q={{ query }}" class="btn-pink btn btn-sm">Pág sig »</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- MODAL ELIMINAR -->
+<div id="deleteModal" style="display:none;" class="modal-confirm">
+  <div class="modal-box">
+    <div style="font-size:3rem;margin-bottom:12px;">⚠️</div>
+    <h5 style="font-weight:700;margin-bottom:8px;">¿Eliminar Producto?</h5>
+    <p style="color:#666;font-size:0.88rem;" id="modalMsg"></p>
+    <p style="color:#ef4444;font-weight:600;font-size:0.85rem;margin:12px 0 24px;">¡Esta acción no se puede deshacer!</p>
+    <div class="d-flex justify-content-center gap-3">
+      <button class="btn" style="background:#e5e7eb;border-radius:10px;padding:10px 28px;font-weight:600;" onclick="closeModal()">Cancelar</button>
+      <form id="deleteForm" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background:#ef4444;color:white;border-radius:10px;padding:10px 28px;font-weight:600;">Eliminar</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showDeleteModal(id, nombre) {
+  document.getElementById('deleteModal').style.display = 'flex';
+  document.getElementById('modalMsg').textContent = `¿Estás seguro que deseas eliminar el producto "${nombre}"?`;
+  document.getElementById('deleteForm').action = `/admin/productos/${id}/eliminar/`;
+}
+function closeModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+</script>
+{% endblock %}

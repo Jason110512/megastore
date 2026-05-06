@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Admin – Mega Store{% endblock %}
+{% block topbar_title %}Panel de Administración{% endblock %}
+
+{% block topbar_icons %}
+<a href="{% url 'admin_pedidos' %}" title="Notificaciones"><i class="fas fa-bell"></i></a>
+<a href="#" title="Carrito"><i class="fas fa-shopping-cart"></i></a>
+{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{% url 'admin_dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'admin_productos' %}"><i class="fas fa-box"></i> Productos</a>
+<a href="{% url 'gestion_usuarios' %}"><i class="fas fa-users"></i> Mensajes/Usuarios</a>
+<a href="{% url 'admin_pedidos' %}"><i class="fas fa-clipboard-list"></i> Ordenes</a>
+<a href="{% url 'mis_facturas' %}"><i class="fas fa-file-invoice"></i> Facturas</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h4>Bienvenido al Panel de Administración de Mega Store!</h4>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon pink"><i class="fas fa-shopping-cart"></i></div>
+      <div>
+        <div class="stat-value">{{ total_productos }}</div>
+        <div class="stat-label">Productos</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fas fa-clipboard-list"></i></div>
+      <div>
+        <div class="stat-value">{{ total_ordenes }}</div>
+        <div class="stat-label">Ordenes</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon pink"><i class="fas fa-dollar-sign"></i></div>
+      <div>
+        <div class="stat-value">${{ total_ventas|floatformat:0 }}</div>
+        <div class="stat-label">Ventas</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+      <div>
+        <div class="stat-value">{{ total_clientes }}</div>
+        <div class="stat-label">Clientes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ÚLTIMAS ÓRDENES -->
+<div style="background:white;border-radius:14px;padding:24px;box-shadow:0 4px 20px rgba(224,62,124,0.1);">
+  <h6 style="font-weight:700;color:#e03e7c;margin-bottom:16px;">Últimas Ordenes</h6>
+  <table class="ms-table">
+    <thead>
+      <tr>
+        <th>N.O</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th><th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for orden in ultimas_ordenes %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>
+          <div style="font-weight:500;">{{ orden.usuario.nombre_completo|default:orden.usuario.username }}</div>
+          <div style="font-size:0.78rem;color:#aaa;">{{ orden.items.first.producto.nombre|default:"—" }}</div>
+        </td>
+        <td style="font-size:0.83rem;">{{ orden.fecha|date:"d/m/Y" }}</td>
+        <td><strong style="color:#e03e7c;">${{ orden.total|floatformat:0 }}</strong></td>
+        <td><span class="status-badge badge-{{ orden.estado }}">{{ orden.get_estado_display }}</span></td>
+        <td>
+          <form method="POST" action="{% url 'eliminar_orden' orden.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger-ms" onclick="return confirm('¿Eliminar orden #{{ orden.id }}?')">
+              Eliminar
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">Sin órdenes aún.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

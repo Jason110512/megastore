@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Mega Store{% endblock %}</title>
+{% load static %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<style>
+  :root {
+    --pink-light: #f9c6e0;
+    --pink-mid: #f06fa1;
+    --pink-dark: #e03e7c;
+    --pink-deep: #c0246a;
+    --purple: #8b5cf6;
+    --purple-light: #c4b5fd;
+    --purple-soft: #e8e0f5;
+    --sidebar-bg: linear-gradient(180deg, #f272a8 0%, #e03e7c 60%, #c0246a 100%);
+    --header-bg: linear-gradient(90deg, #f272a8, #e879a8);
+    --white: #ffffff;
+    --text-dark: #2d1a2e;
+    --text-mid: #5a4060;
+    --card-shadow: 0 4px 20px rgba(224,62,124,0.13);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; background: #fdf0f7; color: var(--text-dark); min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-height: 100vh; background: var(--sidebar-bg);
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
+    box-shadow: 4px 0 20px rgba(192,36,106,0.18);
+  }
+  .sidebar-brand { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  .sidebar-brand .brand-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: white; line-height: 1.1; }
+  .sidebar-brand .brand-sub { color: rgba(255,255,255,0.85); font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-nav a {
+    display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+    color: rgba(255,255,255,0.88); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+    transition: all 0.2s; border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover, .sidebar-nav a.active {
+    background: rgba(255,255,255,0.18); color: white; border-left-color: white;
+  }
+  .sidebar-nav a i { width: 20px; text-align: center; font-size: 1rem; }
+  .sidebar-logout { padding: 16px; }
+  .sidebar-logout a {
+    display: block; text-align: center; background: white; color: var(--pink-dark);
+    padding: 10px; border-radius: 10px; font-weight: 600; text-decoration: none;
+    transition: all 0.2s;
+  }
+  .sidebar-logout a:hover { background: var(--pink-light); }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--header-bg); padding: 0 28px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(192,36,106,0.15); position: sticky; top: 0; z-index: 90;
+  }
+  .topbar-title { color: white; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px; }
+  .topbar-icons { display: flex; align-items: center; gap: 14px; }
+  .topbar-icons a { color: white; font-size: 1.15rem; position: relative; }
+  .badge-cart {
+    position: absolute; top: -6px; right: -8px; background: #ff4444;
+    color: white; border-radius: 50%; width: 18px; height: 18px;
+    font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+
+  /* MAIN LAYOUT */
+  .main-wrapper { margin-left: 240px; min-height: 100vh; }
+  .main-content { padding: 28px; }
+
+  /* CARDS */
+  .stat-card {
+    background: white; border-radius: var(--radius); padding: 22px 24px;
+    box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 16px;
+    border: 1px solid rgba(224,62,124,0.08);
+  }
+  .stat-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+  .stat-icon.pink { background: var(--pink-light); color: var(--pink-dark); }
+  .stat-icon.purple { background: var(--purple-soft); color: var(--purple); }
+  .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-dark); line-height: 1; }
+  .stat-label { font-size: 0.82rem; color: var(--text-mid); margin-top: 2px; }
+
+  /* TABLE */
+  .ms-table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--card-shadow); }
+  .ms-table th { background: var(--purple-soft); color: var(--purple); font-weight: 600; font-size: 0.85rem; padding: 14px 16px; text-align: left; }
+  .ms-table td { padding: 13px 16px; border-bottom: 1px solid #f3e8f5; font-size: 0.88rem; vertical-align: middle; }
+  .ms-table tr:last-child td { border-bottom: none; }
+  .ms-table tr:hover td { background: #fdf5fa; }
+
+  /* BUTTONS */
+  .btn-pink { background: var(--pink-dark); color: white; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; }
+  .btn-pink:hover { background: var(--pink-deep); color: white; }
+  .btn-outline-pink { background: transparent; color: var(--pink-dark); border: 2px solid var(--pink-dark); border-radius: 8px; padding: 6px 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .btn-outline-pink:hover { background: var(--pink-dark); color: white; }
+  .btn-purple { background: var(--purple); color: white; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; }
+  .btn-purple:hover { background: #7c3aed; color: white; }
+  .btn-danger-ms { background: #ef4444; color: white; border: none; border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+  /* FORMS */
+  .form-control:focus, .form-select:focus { border-color: var(--pink-mid); box-shadow: 0 0 0 3px rgba(240,111,161,0.15); }
+  .form-label { font-weight: 500; font-size: 0.88rem; color: var(--text-mid); }
+
+  /* PAGE HEADER */
+  .page-header { background: white; border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--card-shadow); }
+  .page-header h4 { font-weight: 700; color: var(--text-dark); margin: 0; }
+  .page-header p { font-size: 0.85rem; color: var(--text-mid); margin: 4px 0 0; }
+
+  /* PRODUCT CARD */
+  .product-row { background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 16px; }
+  .product-img { width: 70px; height: 70px; border-radius: 10px; object-fit: cover; background: var(--purple-soft); }
+  .product-img-placeholder { width: 70px; height: 70px; border-radius: 10px; background: var(--purple-soft); display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 1.5rem; flex-shrink: 0; }
+  .stars { color: #f59e0b; font-size: 0.85rem; }
+
+  /* ALERTS */
+  .alert { border-radius: 10px; font-size: 0.88rem; }
+
+  /* MODAL */
+  .modal-confirm { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 999; display: flex; align-items: center; justify-content: center; }
+  .modal-box { background: white; border-radius: 18px; padding: 36px 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+
+  /* STATUS BADGES */
+  .badge-pendiente { background: #fef3c7; color: #92400e; }
+  .badge-aprobado { background: #d1fae5; color: #065f46; }
+  .badge-enviado { background: #dbeafe; color: #1e40af; }
+  .badge-entregado { background: #e0e7ff; color: #3730a3; }
+  .badge-cancelado { background: #fee2e2; color: #991b1b; }
+  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-wrapper { margin-left: 0; }
+  }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% block body %}
+<div class="d-flex">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-shopping-bag" style="color:white;font-size:1.6rem;"></i>
+        <div>
+          <div class="brand-title">MEGA<br>STORE</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      {% block sidebar_nav %}{% endblock %}
+    </div>
+    <div class="sidebar-logout">
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Salir</a>
+      {% else %}
+        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main-wrapper w-100">
+    <div class="topbar">
+      <span class="topbar-title">{% block topbar_title %}Mega Store{% endblock %}</span>
+      <div class="topbar-icons">
+        {% block topbar_icons %}
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'envio' %}" title="Carrito" style="position:relative;">
+            <i class="fas fa-shopping-cart"></i>
+            {% if cart_count > 0 %}<span class="badge-cart">{{ cart_count }}</span>{% endif %}
+          </a>
+          <a href="{% url 'mis_ordenes' %}" title="Mis órdenes"><i class="fas fa-bell"></i></a>
+          <a href="{% url 'logout' %}" title="Cerrar sesión">
+            <i class="fas fa-user-circle"></i>
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" style="background:white;color:#e03e7c;padding:6px 16px;border-radius:20px;font-weight:700;font-size:0.82rem;text-decoration:none;">
+            <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+          </a>
+          <a href="{% url 'registro' %}" style="background:#e03e7c;color:white;padding:6px 16px;border-radius:20px;font-weight:700;font-size:0.82rem;text-decoration:none;">
+            <i class="fas fa-user-plus me-1"></i>Registrarse
+          </a>
+        {% endif %}
+        {% endblock %}
+      </div>
+    </div>
+
+    <div class="main-content">
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
