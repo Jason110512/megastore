@@ -9,21 +9,16 @@ from store.decorators import admin_required
 
 def login_view(request):
     if request.user.is_authenticated:
-        if request.user.is_admin_store():
-            return redirect('admin_dashboard')
-        return redirect('catalogo')
+        return redirect('/catalogo/')
 
     error = None
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        from django.contrib.auth import authenticate, login
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            if user.is_admin_store():
-                return redirect('admin_dashboard')
-            return redirect('catalogo')
+            return redirect('/catalogo/')
         else:
             error = 'Usuario o contraseña incorrectos.'
 
@@ -32,7 +27,7 @@ def login_view(request):
 
 def registro_view(request):
     if request.user.is_authenticated:
-        return redirect('catalogo')
+        return redirect('/catalogo/')
 
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -40,7 +35,7 @@ def registro_view(request):
             user = form.save()
             login(request, user)
             messages.success(request, '¡Cuenta creada exitosamente!')
-            return redirect('catalogo')
+            return redirect('/catalogo/')
         else:
             messages.error(request, 'Por favor corrige los errores.')
     else:
@@ -52,7 +47,7 @@ def registro_view(request):
 def logout_view(request):
     logout(request)
     messages.info(request, 'Sesión cerrada.')
-    return redirect('login')
+    return redirect('/accounts/login/')
 
 
 @login_required
@@ -72,7 +67,7 @@ def toggle_usuario(request, pk):
         usuario.save()
         estado = 'activado' if usuario.activo else 'desactivado'
         messages.success(request, f'Usuario {usuario.username} {estado}.')
-    return redirect('gestion_usuarios')
+    return redirect('/accounts/usuarios/')
 
 
 @login_required
@@ -84,7 +79,7 @@ def editar_usuario(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Usuario actualizado.')
-            return redirect('gestion_usuarios')
+            return redirect('/accounts/usuarios/')
     else:
         form = UsuarioAdminForm(instance=usuario)
     return render(request, 'admin_panel/editar_usuario.html', {'form': form, 'usuario': usuario})
@@ -97,4 +92,4 @@ def eliminar_usuario(request, pk):
     if usuario != request.user:
         usuario.delete()
         messages.success(request, 'Usuario eliminado.')
-    return redirect('gestion_usuarios')
+    return redirect('/accounts/usuarios/')
