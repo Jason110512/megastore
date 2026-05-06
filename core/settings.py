@@ -1,12 +1,15 @@
 from pathlib import Path
 import os
 
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-megastore-secret-key-change-in-production-2024'
-
-DEBUG = True
-
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-megastore-secret-key-2024')
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -54,16 +57,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'megastore_db',
-        'USER': 'megastore_user',
-        'PASSWORD': 'megastore123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+if DATABASE_URL and dj_database_url:
+    DATABASES = {'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'megastore_db'),
+            'USER': os.environ.get('DB_USER', 'megastore_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'megastore123'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -73,7 +81,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'accounts.Usuario'
-
 LANGUAGE_CODE = 'es-mx'
 TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
@@ -82,12 +89,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
@@ -95,19 +102,10 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/catalogo/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# ── Email (para recuperación de contraseña) ──────────────────
-# En desarrollo muestra el email en consola
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# Para producción con Gmail descomenta esto:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu_correo@gmail.com'
-# EMAIL_HOST_PASSWORD = 'tu_app_password'
 DEFAULT_FROM_EMAIL = 'Mega Store <no-reply@megastore.com>'
 
-# ── Google Maps API Key ───────────────────────────────────────
-# Google Maps no requerido — usamos Leaflet/OpenStreetMap (gratuito)
+CSRF_TRUSTED_ORIGINS = [
+    'https://megastore-production-9282.up.railway.app',
+    'http://localhost:8000',
+]
