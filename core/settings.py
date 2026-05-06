@@ -1,6 +1,5 @@
 from pathlib import Path
 import os
-
 try:
     import dj_database_url
 except ImportError:
@@ -9,7 +8,7 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-megastore-secret-key-2024')
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -58,7 +57,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
-
 if DATABASE_URL and dj_database_url:
     DATABASES = {'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)}
 else:
@@ -105,20 +103,9 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'Mega Store <no-reply@megastore.com>'
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://megastore-production-9282.up.railway.app',
-    'http://localhost:8000',
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://megastore-production-9282.up.railway.app',
-]
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ['https://megastore-production-9282.up.railway.app']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-# Fix sesiones Railway HTTPS
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_SAMESITE = 'Lax'
