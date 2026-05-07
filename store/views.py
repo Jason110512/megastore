@@ -174,10 +174,13 @@ def envio(request):
 
 @login_required
 def mis_ordenes(request):
+    if request.session.get('es_admin'):
+        ordenes = Orden.objects.all().order_by('-fecha')
+        return render(request, 'store/ordenes.html', {'ordenes': ordenes})
+    if not request.user.is_authenticated:
+        return redirect('/accounts/login/')
     ordenes = Orden.objects.filter(usuario=request.user).order_by('-fecha')
     return render(request, 'store/ordenes.html', {'ordenes': ordenes})
-
-
 @login_required
 def mis_facturas(request):
     # Si es admin ver todas las facturas
@@ -187,9 +190,10 @@ def mis_facturas(request):
     # Si es cliente ver solo sus facturas
     if not request.user.is_authenticated:
         return redirect('/accounts/login/')
-    facturas = Factura.objects.filter(orden__usuario=request.user).order_by('-fecha_emision')
+    facturas = Factura.objects.filter(
+        orden__usuario=request.user
+    ).order_by('-fecha_emision')
     return render(request, 'store/facturas.html', {'facturas': facturas})
-
 
 def ubicaciones(request):
     return render(request, 'store/ubicaciones.html')
