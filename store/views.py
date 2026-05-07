@@ -10,14 +10,10 @@ from .decorators import admin_required
 from accounts.models import Usuario
 
 
-# ─────────────────────────────────────────
-#  CATÁLOGO (público)
-# ─────────────────────────────────────────
-
 def catalogo(request):
     query = request.GET.get('q', '')
     categoria_id = request.GET.get('categoria', '')
-    productos = Producto.objects.filter(disponible=True)
+    productos = Producto.objects.filter(disponible=True).order_by('-fecha_creacion')
 
     if query:
         productos = productos.filter(Q(nombre__icontains=query) | Q(descripcion__icontains=query))
@@ -46,10 +42,6 @@ def catalogo(request):
     })
 
 
-# ─────────────────────────────────────────
-#  DETALLE DEL PRODUCTO (público)
-# ─────────────────────────────────────────
-
 def detalle_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk, disponible=True)
     productos_relacionados = Producto.objects.filter(
@@ -76,10 +68,6 @@ def detalle_producto(request, pk):
     })
 
 
-# ─────────────────────────────────────────
-#  CARRITO
-# ─────────────────────────────────────────
-
 @login_required
 def agregar_carrito(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id, disponible=True)
@@ -94,9 +82,8 @@ def agregar_carrito(request, producto_id):
         item.save()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'success': True, 'total_items': carrito.total_items()})
-    next_url = request.GET.get('next', 'catalogo')
     messages.success(request, f'"{producto.nombre}" agregado al carrito.')
-    return redirect(next_url)
+    return redirect('catalogo')
 
 
 @login_required
@@ -129,10 +116,6 @@ def eliminar_item_carrito(request, producto_id):
         pass
     return redirect('envio')
 
-
-# ─────────────────────────────────────────
-#  ENVÍO / CHECKOUT
-# ─────────────────────────────────────────
 
 @login_required
 def envio(request):
@@ -205,11 +188,8 @@ def ubicaciones(request):
     return render(request, 'store/ubicaciones.html')
 
 
-# ─────────────────────────────────────────
-#  ADMIN: DASHBOARD
-# ─────────────────────────────────────────
+# ── ADMIN ─────────────────────────────────────────────────────
 
-@login_required
 @admin_required
 def admin_dashboard(request):
     total_productos = Producto.objects.count()
@@ -228,11 +208,6 @@ def admin_dashboard(request):
     })
 
 
-# ─────────────────────────────────────────
-#  ADMIN: PRODUCTOS
-# ─────────────────────────────────────────
-
-@login_required
 @admin_required
 def admin_productos(request):
     query = request.GET.get('q', '')
@@ -249,20 +224,18 @@ def admin_productos(request):
     })
 
 
-@login_required
 @admin_required
 def registrar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
             producto = form.save(commit=False)
-            # Fix checkbox disponible
             producto.disponible = 'disponible' in request.POST
             producto.save()
             messages.success(request, f'Producto "{producto.nombre}" registrado.')
-            return redirect('admin_productos')
+            return redirect('/admin/productos/')
         else:
-            messages.error(request, 'Corrige los errores del formulario.')
+            messages.error(request, 'Corrige los errores.')
     else:
         form = ProductoForm(initial={'disponible': True})
     return render(request, 'admin_panel/registrar_producto.html', {
@@ -270,7 +243,6 @@ def registrar_producto(request):
     })
 
 
-@login_required
 @admin_required
 def actualizar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
@@ -280,8 +252,8 @@ def actualizar_producto(request, pk):
             prod = form.save(commit=False)
             prod.disponible = 'disponible' in request.POST
             prod.save()
-            messages.success(request, f'Producto "{prod.nombre}" actualizado.')
-            return redirect('admin_productos')
+            messages.success(request, f'Producto actualizado.')
+            return redirect('/admin/productos/')
     else:
         form = ProductoForm(instance=producto)
     return render(request, 'admin_panel/registrar_producto.html', {
@@ -289,7 +261,6 @@ def actualizar_producto(request, pk):
     })
 
 
-@login_required
 @admin_required
 def eliminar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
@@ -297,41 +268,34 @@ def eliminar_producto(request, pk):
         nombre = producto.nombre
         producto.delete()
         messages.success(request, f'Producto "{nombre}" eliminado.')
-        return redirect('admin_productos')
+        return redirect('/admin/productos/')
     return render(request, 'admin_panel/confirmar_eliminar.html', {
         'objeto': producto, 'tipo': 'producto',
     })
 
 
-# ─────────────────────────────────────────
-#  ADMIN: PEDIDOS
-# ─────────────────────────────────────────
-
-@login_required
 @admin_required
 def admin_pedidos(request):
     ordenes = Orden.objects.select_related('usuario').order_by('-fecha')
     return render(request, 'admin_panel/pedidos.html', {'ordenes': ordenes})
 
 
-@login_required
 @admin_required
 def aprobar_orden(request, pk):
     orden = get_object_or_404(Orden, pk=pk)
     orden.estado = 'aprobado'
     orden.save()
     messages.success(request, f'Orden #{orden.id} aprobada.')
-    return redirect('admin_pedidos')
+    return redirect('/admin/pedidos/')
 
 
-@login_required
 @admin_required
 def eliminar_orden(request, pk):
     orden = get_object_or_404(Orden, pk=pk)
     if request.method == 'POST':
         orden.delete()
         messages.success(request, f'Orden #{pk} eliminada.')
-        return redirect('admin_pedidos')
+        return redirect('/admin/pedidos/')
     return render(request, 'admin_panel/confirmar_eliminar.html', {
         'objeto': orden, 'tipo': 'orden',
     })

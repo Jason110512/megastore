@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import LoginForm, RegistroForm, UsuarioAdminForm
-from .models import Usuario
+from django.http import HttpResponse
+from .forms import RegistroForm, UsuarioAdminForm
+from .models import Usuario, Administrador
 from store.decorators import admin_required
 
 
@@ -13,10 +14,26 @@ def login_view(request):
 
     error = None
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        # ── Primero buscar en tabla Administrador ──────────────
+        try:
+            admin = Administrador.objects.get(username=username, activo=True)
+            if admin.check_password(password):
+                # Guardar en sesión como admin
+                request.session['admin_id'] = admin.id
+                request.session['admin_username'] = admin.username
+                request.session['admin_nombre'] = admin.nombre
+                request.session['es_admin'] = True
+                request.session.save()
+                return redirect('/admin/dashboard/')
+        except Administrador.DoesNotExist:
+            pass
+
+        # ── Luego buscar en tabla Usuario (clientes) ───────────
         user = authenticate(request, username=username, password=password)
-        if user is not None:
+        if user is not None and user.is_active:
             login(request, user)
             return redirect('/catalogo/')
         else:
@@ -43,10 +60,13 @@ def registro_view(request):
     return render(request, 'accounts/registro.html', {'form': form})
 
 
-@login_required
 def logout_view(request):
-    logout(request)
-    messages.info(request, 'Sesión cerrada.')
+    # Cerrar sesión de admin
+    if 'es_admin' in request.session:
+        request.session.flush()
+    # Cerrar sesión de cliente
+    if request.user.is_authenticated:
+        logout(request)
     return redirect('/accounts/login/')
 
 
