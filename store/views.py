@@ -14,17 +14,14 @@ def catalogo(request):
     query = request.GET.get('q', '')
     categoria_id = request.GET.get('categoria', '')
     productos = Producto.objects.filter(disponible=True).order_by('-fecha_creacion')
-
     if query:
         productos = productos.filter(Q(nombre__icontains=query) | Q(descripcion__icontains=query))
     if categoria_id:
         productos = productos.filter(categoria_id=categoria_id)
-
     paginator = Paginator(productos, 10)
     page = request.GET.get('page', 1)
     productos_page = paginator.get_page(page)
     categorias = Categoria.objects.all()
-
     carrito_items = {}
     if request.user.is_authenticated:
         try:
@@ -33,7 +30,6 @@ def catalogo(request):
                 carrito_items[item.producto_id] = item.cantidad
         except Carrito.DoesNotExist:
             pass
-
     return render(request, 'store/catalogo.html', {
         'productos': productos_page,
         'categorias': categorias,
@@ -47,7 +43,6 @@ def detalle_producto(request, pk):
     productos_relacionados = Producto.objects.filter(
         categoria=producto.categoria, disponible=True
     ).exclude(pk=pk)[:4]
-
     en_carrito = 0
     if request.user.is_authenticated:
         try:
@@ -57,7 +52,6 @@ def detalle_producto(request, pk):
                 en_carrito = item.cantidad
         except Carrito.DoesNotExist:
             pass
-
     return render(request, 'store/detalle_producto.html', {
         'producto': producto,
         'imagenes': producto.get_imagenes(),
@@ -125,15 +119,12 @@ def envio(request):
     except Carrito.DoesNotExist:
         messages.error(request, 'Tu carrito está vacío.')
         return redirect('catalogo')
-
     if not items.exists():
         messages.error(request, 'Tu carrito está vacío.')
         return redirect('catalogo')
-
     subtotal = carrito.total()
     costo_envio = 100
     total = subtotal + costo_envio
-
     if request.method == 'POST':
         form = EnvioForm(request.POST)
         if form.is_valid():
@@ -165,14 +156,12 @@ def envio(request):
     else:
         nombre_inicial = request.user.nombre_completo or request.user.username
         form = EnvioForm(initial={'nombre_envio': nombre_inicial})
-
     return render(request, 'store/envio.html', {
         'form': form, 'items': items,
         'subtotal': subtotal, 'costo_envio': costo_envio, 'total': total,
     })
 
 
-@login_required
 def mis_ordenes(request):
     if request.session.get('es_admin'):
         ordenes = Orden.objects.all().order_by('-fecha')
@@ -181,19 +170,19 @@ def mis_ordenes(request):
         return redirect('/accounts/login/')
     ordenes = Orden.objects.filter(usuario=request.user).order_by('-fecha')
     return render(request, 'store/ordenes.html', {'ordenes': ordenes})
-@login_required
+
+
 def mis_facturas(request):
-    # Si es admin ver todas las facturas
     if request.session.get('es_admin'):
         facturas = Factura.objects.all().order_by('-fecha_emision')
         return render(request, 'store/facturas.html', {'facturas': facturas})
-    # Si es cliente ver solo sus facturas
     if not request.user.is_authenticated:
         return redirect('/accounts/login/')
     facturas = Factura.objects.filter(
         orden__usuario=request.user
     ).order_by('-fecha_emision')
     return render(request, 'store/facturas.html', {'facturas': facturas})
+
 
 def ubicaciones(request):
     return render(request, 'store/ubicaciones.html')
@@ -263,7 +252,7 @@ def actualizar_producto(request, pk):
             prod = form.save(commit=False)
             prod.disponible = 'disponible' in request.POST
             prod.save()
-            messages.success(request, f'Producto actualizado.')
+            messages.success(request, 'Producto actualizado.')
             return redirect('/admin/productos/')
     else:
         form = ProductoForm(instance=producto)
