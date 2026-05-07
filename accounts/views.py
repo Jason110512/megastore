@@ -69,15 +69,12 @@ def logout_view(request):
         logout(request)
     return redirect('/accounts/login/')
 
-
-@login_required
 @admin_required
 def gestion_usuarios(request):
     usuarios = Usuario.objects.all().order_by('-fecha_registro')
     return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios})
 
 
-@login_required
 @admin_required
 def toggle_usuario(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
@@ -90,7 +87,6 @@ def toggle_usuario(request, pk):
     return redirect('/accounts/usuarios/')
 
 
-@login_required
 @admin_required
 def editar_usuario(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
@@ -105,7 +101,6 @@ def editar_usuario(request, pk):
     return render(request, 'admin_panel/editar_usuario.html', {'form': form, 'usuario': usuario})
 
 
-@login_required
 @admin_required
 def eliminar_usuario(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)

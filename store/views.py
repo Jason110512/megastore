@@ -180,6 +180,13 @@ def mis_ordenes(request):
 
 @login_required
 def mis_facturas(request):
+    # Si es admin ver todas las facturas
+    if request.session.get('es_admin'):
+        facturas = Factura.objects.all().order_by('-fecha_emision')
+        return render(request, 'store/facturas.html', {'facturas': facturas})
+    # Si es cliente ver solo sus facturas
+    if not request.user.is_authenticated:
+        return redirect('/accounts/login/')
     facturas = Factura.objects.filter(orden__usuario=request.user).order_by('-fecha_emision')
     return render(request, 'store/facturas.html', {'facturas': facturas})
 
