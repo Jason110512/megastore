@@ -1,1 +1,1 @@
-web: python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn core.wsgi --log-file -
+web: python manage.py migrate --noinput && python manage.py collectstatic --noinput && python crear_admin.py && gunicorn core.wsgi --log-file -
