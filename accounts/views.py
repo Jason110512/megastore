@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse
 from .forms import RegistroForm, UsuarioAdminForm
 from .models import Usuario, Administrador
 from store.decorators import admin_required
@@ -17,11 +16,9 @@ def login_view(request):
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
 
-        # ── Primero buscar en tabla Administrador ──────────────
         try:
             admin = Administrador.objects.get(username=username, activo=True)
             if admin.check_password(password):
-                # Guardar en sesión como admin
                 request.session['admin_id'] = admin.id
                 request.session['admin_username'] = admin.username
                 request.session['admin_nombre'] = admin.nombre
@@ -31,7 +28,6 @@ def login_view(request):
         except Administrador.DoesNotExist:
             pass
 
-        # ── Luego buscar en tabla Usuario (clientes) ───────────
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_active:
             login(request, user)
@@ -61,13 +57,52 @@ def registro_view(request):
 
 
 def logout_view(request):
-    # Cerrar sesión de admin
     if 'es_admin' in request.session:
         request.session.flush()
-    # Cerrar sesión de cliente
     if request.user.is_authenticated:
         logout(request)
     return redirect('/accounts/login/')
+
+
+@login_required
+def perfil(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_completo', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        if nombre:
+            request.user.nombre_completo = nombre
+        if correo:
+            request.user.correo = correo
+            request.user.email = correo
+        request.user.save()
+        messages.success(request, 'Perfil actualizado correctamente.')
+        return redirect('/accounts/perfil/')
+    return render(request, 'accounts/perfil.html', {'usuario': request.user})
+
+
+@login_required
+def cambiar_password(request):
+    error = None
+    if request.method == 'POST':
+        password_actual = request.POST.get('password_actual')
+        password_nueva = request.POST.get('password_nueva')
+        password_confirm = request.POST.get('password_confirm')
+
+        if not request.user.check_password(password_actual):
+            error = 'La contraseña actual es incorrecta.'
+        elif password_nueva != password_confirm:
+            error = 'Las contraseñas nuevas no coinciden.'
+        elif len(password_nueva) < 6:
+            error = 'La contraseña debe tener al menos 6 caracteres.'
+        else:
+            request.user.set_password(password_nueva)
+            request.user.save()
+            login(request, request.user)
+            messages.success(request, '¡Contraseña cambiada exitosamente!')
+            return redirect('/accounts/perfil/')
+
+    return render(request, 'accounts/cambiar_password.html', {'error': error})
+
 
 @admin_required
 def gestion_usuarios(request):
